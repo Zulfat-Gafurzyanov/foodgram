@@ -11,6 +11,10 @@ class Ingredients(models.Model):
     name = models.CharField(max_length=128)
     measurement_unit = models.CharField(max_length=64)
 
+    class Meta:
+        verbose_name = 'ингридиент'
+        verbose_name_plural = 'Ингридиенты'
+
 
 class Tags(models.Model):
     """
@@ -20,6 +24,10 @@ class Tags(models.Model):
     """
     name = models.CharField(max_length=32, unique=True)
     slug = models.SlugField(max_length=32, null=True, unique=True)
+
+    class Meta:
+        verbose_name = 'тег'
+        verbose_name_plural = 'Теги'
 
 
 class Recipes(models.Model):
@@ -34,7 +42,7 @@ class Recipes(models.Model):
     """
 
     name = models.CharField(max_length=256)
-    image = models.ImageField()
+    image = models.ImageField(upload_to='recipes_images/')
     text = models.TextField()
     cooking_time = models.PositiveIntegerField(
         validators=[MinValueValidator(1)])
@@ -42,6 +50,10 @@ class Recipes(models.Model):
     ingredients = models.ManyToManyField(
         Ingredients, through = 'IngredientInRecipe')
     tags = models.ManyToManyField(Tags)
+
+    class Meta:
+        verbose_name = 'рецепт'
+        verbose_name_plural = 'Рецепты'
 
 
 class IngredientInRecipe(models.Model):
