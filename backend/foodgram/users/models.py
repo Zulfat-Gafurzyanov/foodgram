@@ -14,14 +14,14 @@ class MyUser(AbstractUser):
     first_name = models.CharField('имя', max_length=150) 
     last_name = models.CharField('фамилия', max_length=150)
     avatar = models.ImageField(
-        'аватар', 
-        upload_to='avatar/', 
+        'аватар',
+        upload_to='avatar/',
         null=True,
         default=None
     )
 
     def __str__(self):
-        return self.user
+        return self.username
 
 
 class Subscribes(models.Model):

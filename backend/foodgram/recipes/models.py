@@ -8,7 +8,7 @@ class Ingredients(models.Model):
     """
     Модель для хранения Ингридиентов.
 
-    Предназначена для определения названия ингридиента и единицы измерения. 
+    Предназначена для определения названия ингридиента и единицы измерения.
     """
     name = models.CharField(
         'название ингридиента',
@@ -32,7 +32,7 @@ class Tags(models.Model):
     """
     Модель для хранения Тегов.
 
-    Предназначена для определения названия тега и слага. 
+    Предназначена для определения названия тега и слага.
     """
     name = models.CharField(
         'название тега',
@@ -49,7 +49,7 @@ class Tags(models.Model):
         ordering = ['name']
         verbose_name = 'тег'
         verbose_name_plural = 'Теги'
-    
+
     def __str__(self):
         return self.name
 
@@ -58,35 +58,35 @@ class Recipes(models.Model):
     """
     Модель для хранения рецептов.
 
-    Предназначена для определения названия рецепта, изображения, 
+    Предназначена для определения названия рецепта, изображения,
     описания и времени приготовления (в минутах).
-    
-    Связана с моделью User (ForeignKey), Ingridients (ManyToMany), 
+
+    Связана с моделью User (ForeignKey), Ingridients (ManyToMany),
     Tags (ManyToMany).
     """
 
     name = models.CharField(
-        'название рецепта', 
+        'название рецепта',
         max_length=256
     )
     image = models.ImageField(
-        'изображение рецепта', 
+        'изображение рецепта',
         upload_to='recipes_images/'
     )
     text = models.TextField('описание рецепта')
     cooking_time = models.PositiveIntegerField(
         'время приготовления',
         validators=[MinValueValidator(1)]
-    )    
+    )
     author = models.ForeignKey(
-        MyUser, 
-        related_name = 'recipes', 
+        MyUser,
+        related_name='recipes',
         on_delete=models.CASCADE
-    )    
+    )
     ingredients = models.ManyToManyField(
-        Ingredients, 
-        through = 'IngredientInRecipe'
-        )
+        Ingredients,
+        through='IngredientInRecipe'
+    )
     tags = models.ManyToManyField(Tags)
 
     class Meta:
@@ -98,17 +98,17 @@ class IngredientInRecipe(models.Model):
     """
     Промежуточная модель.
 
-    Предназначена для определения связи ManyToManyField между моделями 
+    Предназначена для определения связи ManyToManyField между моделями
     Ingredients и Recipes.
 
     Дополнительно определяет количество ингридиента.
     """
     ingredient = models.ForeignKey(
-        Ingredients, 
+        Ingredients,
         on_delete=models.CASCADE
     )
     recipe = models.ForeignKey(
-        Recipes, 
+        Recipes,
         on_delete=models.CASCADE
     )
-    amount = models.PositiveIntegerField()
+    amount = models.PositiveIntegerField('количество ингридиента')
