@@ -1,6 +1,8 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 
+from users.models import MyUser
+
 
 class Ingredients(models.Model):
     """
@@ -8,12 +10,22 @@ class Ingredients(models.Model):
 
     Предназначена для определения названия ингридиента и единицы измерения. 
     """
-    name = models.CharField(max_length=128)
-    measurement_unit = models.CharField(max_length=64)
+    name = models.CharField(
+        'название ингридиента',
+        max_length=128
+    )
+    measurement_unit = models.CharField(
+        'единица измерения',
+        max_length=64
+    )
 
     class Meta:
+        ordering = ['name']
         verbose_name = 'ингридиент'
         verbose_name_plural = 'Ингридиенты'
+
+    def __str__(self):
+        return self.name
 
 
 class Tags(models.Model):
@@ -22,12 +34,24 @@ class Tags(models.Model):
 
     Предназначена для определения названия тега и слага. 
     """
-    name = models.CharField(max_length=32, unique=True)
-    slug = models.SlugField(max_length=32, null=True, unique=True)
+    name = models.CharField(
+        'название тега',
+        max_length=32,
+        unique=True
+    )
+    slug = models.SlugField(
+        'слаг',
+        max_length=32,
+        unique=True
+    )
 
     class Meta:
+        ordering = ['name']
         verbose_name = 'тег'
         verbose_name_plural = 'Теги'
+    
+    def __str__(self):
+        return self.name
 
 
 class Recipes(models.Model):
@@ -41,14 +65,28 @@ class Recipes(models.Model):
     Tags (ManyToMany).
     """
 
-    name = models.CharField(max_length=256)
-    image = models.ImageField(upload_to='recipes_images/')
-    text = models.TextField()
+    name = models.CharField(
+        'название рецепта', 
+        max_length=256
+    )
+    image = models.ImageField(
+        'изображение рецепта', 
+        upload_to='recipes_images/'
+    )
+    text = models.TextField('описание рецепта')
     cooking_time = models.PositiveIntegerField(
-        validators=[MinValueValidator(1)])
-    #author = models.ForeignKey(Users, on_delete=models.SET_NULL, null=True)
+        'время приготовления',
+        validators=[MinValueValidator(1)]
+    )    
+    author = models.ForeignKey(
+        MyUser, 
+        related_name = 'recipes', 
+        on_delete=models.CASCADE
+    )    
     ingredients = models.ManyToManyField(
-        Ingredients, through = 'IngredientInRecipe')
+        Ingredients, 
+        through = 'IngredientInRecipe'
+        )
     tags = models.ManyToManyField(Tags)
 
     class Meta:
@@ -65,7 +103,12 @@ class IngredientInRecipe(models.Model):
 
     Дополнительно определяет количество ингридиента.
     """
-    ingredient = models.ForeignKey(Ingredients, on_delete=models.CASCADE)
-    recipe = models.ForeignKey(Recipes, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(
+        Ingredients, 
+        on_delete=models.CASCADE
+    )
+    recipe = models.ForeignKey(
+        Recipes, 
+        on_delete=models.CASCADE
+    )
     amount = models.PositiveIntegerField()
-
