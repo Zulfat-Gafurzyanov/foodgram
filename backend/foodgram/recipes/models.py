@@ -20,7 +20,7 @@ class Ingredients(models.Model):
     )
 
     class Meta:
-        ordering = ['name']
+        ordering = ['id']
         verbose_name = 'ингридиент'
         verbose_name_plural = 'Ингридиенты'
 
@@ -71,7 +71,9 @@ class Recipes(models.Model):
     )
     image = models.ImageField(
         'изображение рецепта',
-        upload_to='recipes_images/'
+        upload_to='recipes_images/',
+        null=True,  # !!! УБРАТЬ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        default=None  # !!! УБРАТЬ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     )
     text = models.TextField('описание рецепта')
     cooking_time = models.PositiveIntegerField(
@@ -85,13 +87,20 @@ class Recipes(models.Model):
     )
     ingredients = models.ManyToManyField(
         Ingredients,
+        related_name='recipes',
         through='IngredientInRecipe'
     )
-    tags = models.ManyToManyField(Tags)
+    tags = models.ManyToManyField(
+        Tags,
+        related_name='recipes'
+    )
 
     class Meta:
         verbose_name = 'рецепт'
         verbose_name_plural = 'Рецепты'
+
+    def __str__(self):
+        return self.name
 
 
 class IngredientInRecipe(models.Model):
@@ -112,3 +121,26 @@ class IngredientInRecipe(models.Model):
         on_delete=models.CASCADE
     )
     amount = models.PositiveIntegerField('количество ингридиента')
+
+    def __str__(self):
+        return f'{self.ingredient} {self.recipe}'
+
+
+class TagOfRecipe(models.Model):
+    """
+    Промежуточная модель.
+
+    Предназначена для определения связи ManyToManyField между моделями
+    Tags и Recipes.
+    """
+    tag = models.ForeignKey(
+        Tags,
+        on_delete=models.CASCADE
+    )
+    recipe = models.ForeignKey(
+        Recipes,
+        on_delete=models.CASCADE
+    )
+
+    def __str__(self):
+        return f'{self.tag} {self.recipe}'
