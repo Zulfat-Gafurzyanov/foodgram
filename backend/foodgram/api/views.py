@@ -1,7 +1,9 @@
 from rest_framework import viewsets
 
 from recipes.models import Ingredients, Recipes, Tags
+from users.models import MyUser
 from api.serializers import (
+    AuthorSerializer,
     IngredientsSerializer,
     RecipesSerializer,
     TagsSerializer

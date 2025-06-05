@@ -6,19 +6,24 @@ class MyUser(AbstractUser):
     """
     Модель для хранения данных о пользователе.
 
-    Предназначена для определения юзернейма, почты, имени, фамилии и 
+    Предназначена для определения юзернейма, почты, имени, фамилии и
     аватара пользователя.
     """
-    username = models.CharField('юзернейм', max_length=150, unique=True) # валидация по символам  ^[\w.@+-]+\z
-    email = models.EmailField('адрес электронной почты', max_length=254)
-    first_name = models.CharField('имя', max_length=150) 
+    username = models.CharField('юзернейм', max_length=150, unique=True)
+    email = models.EmailField('адрес электронной почты', max_length=254, unique=True)
+    first_name = models.CharField('имя', max_length=150)
     last_name = models.CharField('фамилия', max_length=150)
     avatar = models.ImageField(
         'аватар',
-        upload_to='avatar/',
+        upload_to='media/users/',
         null=True,
-        default=None
+        blank=True
     )
+
+    class Meta:
+        ordering = ['username']
+        verbose_name = 'пользователь'
+        verbose_name_plural = 'Пользователи'
 
     def __str__(self):
         return self.username
@@ -26,23 +31,25 @@ class MyUser(AbstractUser):
 
 class Subscribes(models.Model):
     """
-    Модель для хранения данных о пользователе.
-
-    Предназначена для определения юзернейма, почты, имени, фамилии и 
-    аватара пользователя.
+    Модель для хранения данных о подписке.
     """
     user = models.ForeignKey(
-        MyUser, 
-        verbose_name='подписчик', 
-        related_name='subscribers', 
+        MyUser,
+        verbose_name='подписчик',
+        related_name='subscribers',
         on_delete=models.CASCADE
     )
     author = models.ForeignKey(
-        MyUser, 
-        verbose_name='автор рецепта', 
-        related_name='subscriber', 
+        MyUser,
+        verbose_name='автор рецепта',
+        related_name='subscriber',
         on_delete=models.CASCADE
     )
+
+    class Meta:
+        ordering = ['id']
+        verbose_name = 'подписчик'
+        verbose_name_plural = 'Подписчики'
 
     def __str__(self):
         return f'{self.user} подписался на {self.author}'

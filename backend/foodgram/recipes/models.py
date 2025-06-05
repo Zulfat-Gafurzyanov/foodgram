@@ -6,12 +6,12 @@ from users.models import MyUser
 
 class Ingredients(models.Model):
     """
-    Модель для хранения Ингридиентов.
+    Модель для хранения Ингредиентов.
 
-    Предназначена для определения названия ингридиента и единицы измерения.
+    Предназначена для определения названия ингредиента и единицы измерения.
     """
     name = models.CharField(
-        'название ингридиента',
+        'название ингредиента',
         max_length=128
     )
     measurement_unit = models.CharField(
@@ -21,8 +21,8 @@ class Ingredients(models.Model):
 
     class Meta:
         ordering = ['id']
-        verbose_name = 'ингридиент'
-        verbose_name_plural = 'Ингридиенты'
+        verbose_name = 'ингредиент'
+        verbose_name_plural = 'Ингредиенты'
 
     def __str__(self):
         return self.name
@@ -71,9 +71,7 @@ class Recipes(models.Model):
     )
     image = models.ImageField(
         'изображение рецепта',
-        upload_to='recipes_images/',
-        null=True,  # !!! УБРАТЬ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        default=None  # !!! УБРАТЬ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        upload_to='media/recipes/images/'
     )
     text = models.TextField('описание рецепта')
     cooking_time = models.PositiveIntegerField(
@@ -82,17 +80,20 @@ class Recipes(models.Model):
     )
     author = models.ForeignKey(
         MyUser,
+        verbose_name='автор рецепта',
         related_name='recipes',
         on_delete=models.CASCADE
     )
     ingredients = models.ManyToManyField(
         Ingredients,
+        verbose_name='ингредиенты',
         related_name='recipes',
-        through='IngredientInRecipe'
+        through='IngredientInRecipe',
     )
     tags = models.ManyToManyField(
         Tags,
-        related_name='recipes'
+        verbose_name='теги',
+        related_name='recipes',
     )
 
     class Meta:
@@ -110,37 +111,19 @@ class IngredientInRecipe(models.Model):
     Предназначена для определения связи ManyToManyField между моделями
     Ingredients и Recipes.
 
-    Дополнительно определяет количество ингридиента.
+    Дополнительно определяет количество ингредиента.
     """
     ingredient = models.ForeignKey(
         Ingredients,
+        verbose_name='ингредиент',
         on_delete=models.CASCADE
     )
     recipe = models.ForeignKey(
         Recipes,
+        verbose_name='рецепт',
         on_delete=models.CASCADE
     )
-    amount = models.PositiveIntegerField('количество ингридиента')
+    amount = models.PositiveIntegerField('количество ингредиента')
 
     def __str__(self):
         return f'{self.ingredient} {self.recipe}'
-
-
-class TagOfRecipe(models.Model):
-    """
-    Промежуточная модель.
-
-    Предназначена для определения связи ManyToManyField между моделями
-    Tags и Recipes.
-    """
-    tag = models.ForeignKey(
-        Tags,
-        on_delete=models.CASCADE
-    )
-    recipe = models.ForeignKey(
-        Recipes,
-        on_delete=models.CASCADE
-    )
-
-    def __str__(self):
-        return f'{self.tag} {self.recipe}'

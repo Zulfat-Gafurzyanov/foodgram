@@ -7,6 +7,7 @@ from django.core.management.base import BaseCommand
 from recipes.models import Ingredients
 
 
+# Запуск команды: python manage.py load_csv
 class Command(BaseCommand):
     help = 'Импортирует данные из CSV-файла для модели Ingredients'
 
