@@ -20,19 +20,22 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class IngredientsSerializer(serializers.ModelSerializer):
-    
+    """Сериализатор для ингредиентов."""
+
     class Meta:
         model = Ingredients
         fields = ('id', 'name', 'measurement_unit')
 
 
 class TagsSerializer(serializers.ModelSerializer):
+    """Сериализатор для тегов."""
     class Meta:
         model = Tags
         fields = ('id', 'name', 'slug')
 
 
 class IngredientInRecipeCreateSerializer(serializers.ModelSerializer):
+    """Сериализатор для ингредиентов при создании рецепта."""
     id = serializers.IntegerField()
 
     class Meta:
@@ -41,12 +44,14 @@ class IngredientInRecipeCreateSerializer(serializers.ModelSerializer):
 
 
 class AmountSerializer(serializers.ModelSerializer):
+    """Сериализатор для получения количества ингредиента."""
     class Meta:
         model = IngredientInRecipe
         fields = ('amount')
 
 
 class IngredientInRecipeReadSerializer(serializers.ModelSerializer):
+    """Сериализатор для получения списка ингредиентов рецепта."""
     amount = AmountSerializer(read_only=True)
 
     class Meta:
@@ -68,7 +73,7 @@ class RecipeСreateSerializer(serializers.ModelSerializer):
                   'cooking_time')
 
     def create(self, validated_data):
-        # Создаем рецепт.
+        # Создание рецепта.
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         user = self.context.get('request').user
@@ -84,6 +89,36 @@ class RecipeСreateSerializer(serializers.ModelSerializer):
                 amount=amount
             )
         return recipe
+
+    def update(self, instance, validated_data):
+        # Обновление рецепта.
+        ingredients = validated_data.pop('ingredients', [])
+        tags = validated_data.pop('tags', [])
+
+        # Обновляем остальные поля рецепта
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()  # Сохраняем изменения основного рецепта
+
+        # Обновляем теги
+        instance.tags.clear()  # Удаляем существующие теги
+        if tags:
+            instance.tags.add(*tags)  # Добавляем новые теги
+
+        # Обновляем ингредиенты
+        IngredientInRecipe.objects.filter(recipe=instance).delete()
+        for ingredient in ingredients:
+            ingredient_obj = Ingredients.objects.get(pk=ingredient['id'])
+            amount = ingredient['amount']
+            IngredientInRecipe.objects.create(
+                ingredient=ingredient_obj,
+                recipe=instance,
+                amount=amount
+            )
+        return instance
+
+
+
 
 # class UserSerializer(serializers.ModelSerializer):
 #     avatar = Base64ImageField()
