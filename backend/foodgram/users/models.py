@@ -9,10 +9,24 @@ class MyUser(AbstractUser):
     Предназначена для определения юзернейма, почты, имени, фамилии и
     аватара пользователя.
     """
-    username = models.CharField('юзернейм', max_length=150, unique=True)
-    email = models.EmailField('адрес электронной почты', max_length=254, unique=True)
-    first_name = models.CharField('имя', max_length=150)
-    last_name = models.CharField('фамилия', max_length=150)
+    username = models.CharField(
+        'юзернейм',
+        max_length=150,
+        unique=True
+    )
+    email = models.EmailField(
+        'адрес электронной почты',
+        max_length=254,
+        unique=True
+    )
+    first_name = models.CharField(
+        'имя',
+        max_length=150
+    )
+    last_name = models.CharField(
+        'фамилия',
+        max_length=150
+    )
     avatar = models.ImageField(
         'аватар',
         upload_to='media/users/',

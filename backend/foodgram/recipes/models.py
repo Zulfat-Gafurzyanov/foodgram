@@ -22,7 +22,7 @@ class Ingredients(models.Model):
     class Meta:
         ordering = ['id']
         verbose_name = 'ингредиент'
-        verbose_name_plural = 'Ингредиенты'
+        verbose_name_plural = 'ингредиенты'
 
     def __str__(self):
         return self.name
@@ -48,7 +48,7 @@ class Tags(models.Model):
     class Meta:
         ordering = ['name']
         verbose_name = 'тег'
-        verbose_name_plural = 'Теги'
+        verbose_name_plural = 'теги'
 
     def __str__(self):
         return self.name
@@ -61,7 +61,7 @@ class Recipes(models.Model):
     Предназначена для определения названия рецепта, изображения,
     описания и времени приготовления (в минутах).
 
-    Связана с моделью User (ForeignKey), Ingridients (ManyToMany),
+    Связана с моделью MyUser (ForeignKey), Ingridients (ManyToMany),
     Tags (ManyToMany).
     """
 
@@ -73,7 +73,9 @@ class Recipes(models.Model):
         'изображение рецепта',
         upload_to='media/recipes/images/'
     )
-    text = models.TextField('описание рецепта')
+    text = models.TextField(
+        'описание рецепта'
+    )
     cooking_time = models.PositiveIntegerField(
         'время приготовления',
         validators=[MinValueValidator(1)]
@@ -97,8 +99,9 @@ class Recipes(models.Model):
     )
 
     class Meta:
+        ordering = ['id']
         verbose_name = 'рецепт'
-        verbose_name_plural = 'Рецепты'
+        verbose_name_plural = 'рецепты'
 
     def __str__(self):
         return self.name
@@ -111,7 +114,7 @@ class IngredientInRecipe(models.Model):
     Предназначена для определения связи ManyToManyField между моделями
     Ingredients и Recipes.
 
-    Дополнительно определяет количество ингредиента.
+    Дополнительно определяет количество ингредиента (amount).
     """
     ingredient = models.ForeignKey(
         Ingredients,
@@ -123,7 +126,110 @@ class IngredientInRecipe(models.Model):
         verbose_name='рецепт',
         on_delete=models.CASCADE
     )
-    amount = models.PositiveIntegerField('количество ингредиента')
+    amount = models.PositiveSmallIntegerField('количество ингредиента')
+
+    class Meta:
+        verbose_name = 'ингредиент рецепта'
+        verbose_name_plural = 'ингредиенты рецепта'
+        # Уникальное ограничение, чтобы избежать дублирования
+        # одного и того же ингредиента для рецепта.
+        constraints = (
+            models.UniqueConstraint(
+                fields=('ingredient', 'recipe'),
+                name='unique_ingredient_recipe',
+            ),
+        )
 
     def __str__(self):
-        return f'{self.ingredient} {self.recipe}'
+        return f'Ингридиент {self.recipe.name}: {self.ingredient.name}'
+
+
+class TagsOfRecipe(models.Model):
+    """
+    Промежуточная модель.
+
+    Предназначена для определения связи ManyToManyField между моделями
+    Tags и Recipes.
+    """
+    tag = models.ForeignKey(
+        Tags,
+        verbose_name='тег',
+        on_delete=models.CASCADE
+    )
+    recipe = models.ForeignKey(
+        Recipes,
+        verbose_name='рецепт',
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        verbose_name = 'тег рецепта'
+        verbose_name_plural = 'теги рецепта'
+        # Уникальное ограничение, чтобы избежать дублирования
+        # одного и того же тега для рецепта.
+        constraints = [
+            models.UniqueConstraint(
+                fields=['tag', 'recipe'], name='unique_tag_recipe')
+        ]
+
+    def __str__(self):
+        return f'Тег {self.recipe.name}: {self.tag.name}'
+
+
+class UserRecipe(models.Model):
+    """
+    Абстрактная модель для описания полей пользователя и рецепта.
+    """
+    user = models.ForeignKey(
+        MyUser,
+        verbose_name='пользователь',
+        on_delete=models.CASCADE
+    )
+    recipe = models.ForeignKey(
+        Recipes,
+        verbose_name='рецепт',
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        abstract = True
+
+
+class Favorite(UserRecipe):
+    """
+    Промежуточная модель для хранения избранных рецептов.
+
+    Связана с моделью MyUser (ForeignKey), Recipes (ForeignKey).
+    """
+    class Meta:
+        # Уникальное ограничение, чтобы избежать дублирования
+        # одного и того же рецепта в избранном.
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'], name='unique_favorite')
+        ]
+        verbose_name = 'избранный рецепт'
+        verbose_name_plural = 'избранные рецепты'
+
+    def __str__(self):
+        return f'{self.user.username}: избранный рецепт: {self.recipe.name}'
+
+
+class ShoppingCart(UserRecipe):
+    """
+    Промежуточная модель для хранения списка покупок.
+
+    Связана с моделью MyUser (ForeignKey), Recipes (ForeignKey).
+    """
+    class Meta:
+        # Уникальное ограничение, чтобы избежать дублирования
+        # одного и того же рецепта в списке покупок.
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'], name='shopping_cart')
+        ]
+        verbose_name = 'список покупок'
+        verbose_name_plural = 'списки покупок'
+
+    def __str__(self):
+        return f'{self.user.username}: в списке покупок: {self.recipe.name}'
