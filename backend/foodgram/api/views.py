@@ -5,7 +5,7 @@ from users.models import MyUser
 from api.serializers import (
     UserSerializer,
     IngredientsSerializer,
-    RecipeСreateSerializer,
+    RecipeСreateUpdateSerializer,
     TagsSerializer
 )
 
@@ -17,7 +17,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipes.objects.all()
-    serializer_class = RecipeСreateSerializer
+    serializer_class = RecipeСreateUpdateSerializer
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
