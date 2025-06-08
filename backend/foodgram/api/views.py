@@ -2,8 +2,10 @@ from rest_framework import viewsets
 
 from recipes.models import Ingredients, Recipes, Tags
 from users.models import MyUser
-from api.serializers import (
-    UserSerializer,
+
+from .pagination import RecipePagination
+from .serializers import (
+    UserCreateSerializer,
     IngredientsSerializer,
     RecipeСreateUpdateSerializer,
     TagsSerializer
@@ -12,12 +14,17 @@ from api.serializers import (
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = MyUser.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = UserCreateSerializer
+
+    # написать если методы такой то то сериализатор такой то
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipes.objects.all()
     serializer_class = RecipeСreateUpdateSerializer
+    pagination_class = RecipePagination
+
+    # написать если методы такой то то сериализатор такой то
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):

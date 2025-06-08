@@ -15,7 +15,7 @@ class MyUser(AbstractUser):
         unique=True
     )
     email = models.EmailField(
-        'адрес электронной почты',
+        'электронная почты',
         max_length=254,
         unique=True
     )
@@ -37,7 +37,7 @@ class MyUser(AbstractUser):
     class Meta:
         ordering = ['username']
         verbose_name = 'пользователь'
-        verbose_name_plural = 'Пользователи'
+        verbose_name_plural = 'пользователи'
 
     def __str__(self):
         return self.username
@@ -46,6 +46,9 @@ class MyUser(AbstractUser):
 class Subscribes(models.Model):
     """
     Модель для хранения данных о подписке.
+
+    Связана с полем user (ForeignKey) и полем author (ForeignKey)
+    модели MyUser.
     """
     user = models.ForeignKey(
         MyUser,
@@ -64,6 +67,14 @@ class Subscribes(models.Model):
         ordering = ['id']
         verbose_name = 'подписчик'
         verbose_name_plural = 'Подписчики'
+        # Уникальное ограничение, чтобы избежать подписки
+        # на самого себя.
+        constraints = (
+            models.UniqueConstraint(
+                fields=('user', 'author'),
+                name='unique_subscribes'
+            ),
+        )
 
     def __str__(self):
         return f'{self.user} подписался на {self.author}'
