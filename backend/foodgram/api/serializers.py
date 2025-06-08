@@ -77,6 +77,7 @@ class IngredientInRecipeReadSerializer(serializers.ModelSerializer):
 
 
 class RecipeСreateUpdateSerializer(serializers.ModelSerializer):
+    """Сериализатор для создания и изменения рецепта."""
     ingredients = IngredientInRecipeCreateSerializer(many=True)
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tags.objects.all(),

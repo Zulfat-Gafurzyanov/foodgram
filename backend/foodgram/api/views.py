@@ -8,6 +8,7 @@ from .serializers import (
     UserCreateSerializer,
     IngredientsSerializer,
     RecipeСreateUpdateSerializer,
+    RecipeReadDetailDeleteSerializer,
     TagsSerializer
 )
 
@@ -19,12 +20,15 @@ class UserViewSet(viewsets.ModelViewSet):
     # написать если методы такой то то сериализатор такой то
 
 
-class RecipeViewSet(viewsets.ModelViewSet):
+class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipes.objects.all()
     serializer_class = RecipeСreateUpdateSerializer
     pagination_class = RecipePagination
 
-    # написать если методы такой то то сериализатор такой то
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve', 'destroy'):
+            return RecipeReadDetailDeleteSerializer
+        return RecipeСreateUpdateSerializer
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
