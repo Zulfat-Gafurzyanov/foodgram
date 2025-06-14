@@ -54,31 +54,19 @@ class TagsSerializer(serializers.ModelSerializer):
 class IngredientInRecipeCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для ингредиентов при создании рецепта."""
     id = serializers.IntegerField()
+    amount = serializers.IntegerField()
 
     class Meta:
         model = IngredientInRecipe
         fields = ('id', 'amount')
 
 
-class AmountSerializer(serializers.ModelSerializer):
-    """Сериализатор для получения количества ингредиента."""
-    class Meta:
-        model = IngredientInRecipe
-        fields = ('amount',)
-
-
-class IngredientInRecipeReadSerializer(serializers.ModelSerializer):
-    """Сериализатор для получения списка ингредиентов рецепта."""
-    amount = AmountSerializer(read_only=True)
-
-    class Meta:
-        model = Ingredients
-        fields = ('id', 'name', 'measurement_unit', 'amount')
-
-
 class RecipeСreateUpdateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания и изменения рецепта."""
-    ingredients = IngredientInRecipeCreateSerializer(many=True)
+    ingredients = IngredientInRecipeCreateSerializer(
+        many=True,
+        write_only=True
+    )
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tags.objects.all(),
         many=True,
@@ -94,12 +82,14 @@ class RecipeСreateUpdateSerializer(serializers.ModelSerializer):
         """Создает рецепт."""
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        user = self.context.get('request').user
-        recipe = Recipes.objects.create(**validated_data, author=user)
+        recipe = Recipes.objects.create(**validated_data)
+        print(recipe)
+        print(**validated_data)
         # Устанавливаем теги и добавляем ингредиенты.
         for tag in tags:
             recipe.tags.add(tag)
         for ingredient in ingredients:
+            print(ingredient)
             ingredient_obj = Ingredients.objects.get(pk=ingredient['id'])
             amount = ingredient['amount']
             IngredientInRecipe.objects.create(
@@ -118,11 +108,12 @@ class RecipeСreateUpdateSerializer(serializers.ModelSerializer):
         instance.text = validated_data.get('text', instance.text)
         instance.cooking_time = validated_data.get(
             'cooking_time', instance.cooking_time)
+        instance.image = validated_data.get('image', instance.image)
         instance.save()
 
         # Полностью очищаем предыдущие ингредиен# написать если методы такой то то сериализатор такой тоты и и теги,
         # заново записываем новые:
-        instance.ingredients.clear()
+        IngredientInRecipe.objects.filter(recipe=instance).delete()
         for ingredient in ingredients:
             ingredient_obj = Ingredients.objects.get(pk=ingredient['id'])
             amount = ingredient['amount']
@@ -137,6 +128,19 @@ class RecipeСreateUpdateSerializer(serializers.ModelSerializer):
         return instance
 
 
+class IngredientInRecipeReadSerializer(serializers.ModelSerializer):
+    """Сериализатор для получения списка ингредиентов рецепта."""
+    id = serializers.ReadOnlyField(source='ingredients.id')
+    name = serializers.ReadOnlyField(source='ingredients.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredients.measurement_unit'
+    )
+
+    class Meta:
+        model = IngredientInRecipe
+        fields = ('id', 'name', 'measurement_unit', 'amount')
+
+
 class RecipeReadDetailDeleteSerializer(serializers.ModelSerializer):
     """
     Сериализатор:
@@ -145,9 +149,13 @@ class RecipeReadDetailDeleteSerializer(serializers.ModelSerializer):
     - для удаления рецепта.
     """
 
-    tags = TagsSerializer(many=True)
-    author = UserReadSerializer()
-    ingredients = IngredientInRecipeReadSerializer(many=True)
+    tags = TagsSerializer(many=True, read_only=True)
+    author = UserReadSerializer(read_only=True)
+    ingredients = IngredientInRecipeReadSerializer(
+        many=True,
+        read_only=True,
+        source='ingredients_in_recipe'
+    )
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
