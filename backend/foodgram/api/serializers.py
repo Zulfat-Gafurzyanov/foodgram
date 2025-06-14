@@ -179,6 +179,7 @@ class RecipeReadDetailDeleteSerializer(serializers.ModelSerializer):
             return False
         return ShoppingCart.objects.filter(user=user, recipe=obj).exists()
 
+
 # class UserSerializer(serializers.ModelSerializer):
 #     avatar = Base64ImageField()
 
