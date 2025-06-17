@@ -1,3 +1,4 @@
+from djoser.serializers import UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
@@ -12,14 +13,8 @@ from recipes.models import (
 from users.models import MyUser, Subscribes
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = MyUser
-        fields = ('email', 'id', 'username', 'first_name', 'last_name')
-
-
-class UserReadSerializer(serializers.ModelSerializer):
+class CustomUserBaseSerializer(serializers.ModelSerializer):
+    """Базовый сериализатор для пользователей."""
     is_subscribed = serializers.SerializerMethodField()
     avatar = Base64ImageField(required=False)
 
@@ -34,6 +29,42 @@ class UserReadSerializer(serializers.ModelSerializer):
         if not user.is_authenticated:
             return False
         return Subscribes.objects.filter(user=user, author=obj).exists()
+
+
+class CustomUserCreateSerializer(UserCreateSerializer):
+    """Cериализатор для создания пользователей."""
+
+    class Meta:
+        model = MyUser
+        fields = ('email', 'id', 'username', 'first_name', 'last_name',
+                  'password')
+
+
+class UserSubscribeSerializer(CustomUserBaseSerializer):
+    """Сериализатор для создания подписки на пользователей."""
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta(CustomUserBaseSerializer.Meta):
+        fields = (*CustomUserBaseSerializer.Meta.fields, 
+                  'recipes', 'recipes_count')
+
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        recipes = obj.recipes.all()
+        limit = request.query_params.get('recipes_limit')
+        if limit and limit.isdigit():
+            recipes = recipes[: int(limit)]
+        return RecipeMiniSerializer(recipes, many=True).data
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
+
+
+class RecipeMiniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipes
+        fields = ('id', 'name', 'image', 'cooking_time')
 
 
 class IngredientsSerializer(serializers.ModelSerializer):
@@ -150,7 +181,7 @@ class RecipeReadDetailDeleteSerializer(serializers.ModelSerializer):
     """
 
     tags = TagsSerializer(many=True, read_only=True)
-    author = UserReadSerializer(read_only=True)
+    author = CustomUserBaseSerializer(read_only=True)
     ingredients = IngredientInRecipeReadSerializer(
         many=True,
         read_only=True,
@@ -178,51 +209,3 @@ class RecipeReadDetailDeleteSerializer(serializers.ModelSerializer):
         if not user.is_authenticated:
             return False
         return ShoppingCart.objects.filter(user=user, recipe=obj).exists()
-
-
-# class UserSerializer(serializers.ModelSerializer):
-#     avatar = Base64ImageField()
-
-#     class Meta:
-#         model = MyUser
-#         fields = ('username', 'email', 'first_name', 'last_name', 'is_subscribed', 'avatar')
-
-#     def create(self, validated_data):
-#         user = MyUser(
-#             email=validated_data['email'],
-#             username=validated_data['username'],
-#             first_name=validated_data['first_name'],
-#             last_name=validated_data['last_name']
-#         )
-#         user.set_password(validated_data['password'])
-#         user.save()
-#         return user
-
-
-
-
-
-# class UserSerializer(serializers.ModelSerializer):
-#     avatar = Base64ImageField()
-
-#     class Meta:
-#         model = MyUser
-#         fields = ('username', 'email', 'first_name', 'last_name', 'is_subscribed', 'avatar')
-
-#     def create(self, validated_data):
-#         user = MyUser(
-#             email=validated_data['email'],
-#             username=validated_data['username'],
-#             first_name=validated_data['first_name'],
-#             last_name=validated_data['last_name']
-#         )
-#         user.set_password(validated_data['password'])
-#         user.save()
-#         source='ingredient.name', required=True)
-#     measurement_unit = serializers.CharField(
-#         source='ingredient.measurement_unit', required=True)
-#     amount = serializers.FloatField()
-
-#     class Meta:
-#         model = IngredientInRecipe
-#         fields = ('id', 'name', 'measurement_unit', 'amount')

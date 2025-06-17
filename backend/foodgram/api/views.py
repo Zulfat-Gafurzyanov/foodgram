@@ -1,13 +1,14 @@
+from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 
 from recipes.models import Ingredients, Recipes, Tags
 from users.models import MyUser
-
 from .pagination import RecipePagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (
-    UserCreateSerializer,
+    CustomUserBaseSerializer,
+    CustomUserCreateSerializer,
     IngredientsSerializer,
     RecipeСreateUpdateSerializer,
     RecipeReadDetailDeleteSerializer,
@@ -15,9 +16,9 @@ from .serializers import (
 )
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(UserViewSet):
     queryset = MyUser.objects.all()
-    serializer_class = UserCreateSerializer
+    serializer_class = CustomUserCreateSerializer
 
     # написать если методы такой то то сериализатор такой то
 
