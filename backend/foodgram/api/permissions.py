@@ -1,12 +1,14 @@
 from rest_framework import permissions
 
 
-class IsAuthorOrReadOnly(permissions.BasePermission):
+class IsAuthorOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
     """
-    Разрешение, позволяющее только автору рецепта редактировать его.
+    1. Если метод  безопасный, то доступ разрешен сразу.
+    2. Если метод небезопасный, то доступ предоставляется, если объект 
+    был создан самим пользователем, выполнившим запрос.
     """
 
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
-        return obj.owner == request.user
+        return obj.author == request.user

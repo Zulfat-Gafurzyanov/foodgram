@@ -6,13 +6,13 @@ from .views import (
     IngredientsViewSet,
     RecipesViewSet,
     TagsViewSet,
-    UserViewSet
+    CustomUserViewSet
 )
 
 
 router = DefaultRouter()
 
-router.register('users', UserViewSet)
+router.register('users', CustomUserViewSet)
 router.register('recipes', RecipesViewSet)
 router.register('ingredients', IngredientsViewSet)
 router.register('tags', TagsViewSet)

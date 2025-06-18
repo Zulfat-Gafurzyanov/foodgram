@@ -15,7 +15,7 @@ class MyUser(AbstractUser):
         unique=True
     )
     email = models.EmailField(
-        'электронная почты',
+        'электронная почта',
         max_length=254,
         unique=True
     )
