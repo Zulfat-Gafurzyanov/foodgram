@@ -76,22 +76,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    @staticmethod
-    def add_to(serializer_class, request, id):
-        serializer = serializer_class(
-            data={'user': request.user.id, 'recipe': id},
-            context={'request': request},
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def destroy(self, request, *args, **kwargs):
-        """Удаляет рецепт."""
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     """

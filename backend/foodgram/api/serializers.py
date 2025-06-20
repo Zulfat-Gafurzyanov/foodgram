@@ -114,18 +114,32 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                   'cooking_time')
 
     def validate_ingredients(self, value):
+        if len(value) != len({item['id'] for item in value}):
+            raise serializers.ValidationError('Дублируются ингредиенты.')
         if not value:
             raise serializers.ValidationError(
-                'Укажите ингредиент для рецепта.')
+                'Укажите хотя бы один ингредиент для рецепта.')
+        return value
 
     def validate_tags(self, value):
+        if len(value) != len(set(value)):
+            raise serializers.ValidationError('Использованы одинаковые теги.')
         if not value:
             raise serializers.ValidationError(
-                'Укажите тег рецепта.')
+                'Укажите хотя бы один тег рецепта.')
+        return value
+
+    def to_representation(self, instance):
+        serializer = RecipeReadSerializer(
+            instance, context={'request': self.context.get('request')}
+        )
+        return serializer.data
 
     def create_ingredients(self, ingredients, recipe):
         objs = []
         for ingredient in ingredients:
+            print(ingredient['id'])
+            print(ingredient['amount'])
             objs.append(
                 IngredientInRecipe(
                     recipe=recipe,
@@ -133,6 +147,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                     amount=ingredient['amount'],
                 )
             )
+        print(objs)
         IngredientInRecipe.objects.bulk_create(objs)
 
     def create(self, validated_data):
@@ -157,10 +172,10 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
 class IngredientInRecipeReadSerializer(serializers.ModelSerializer):
     """Сериализатор для получения списка ингредиентов рецепта."""
-    id = serializers.ReadOnlyField(source='ingredients.id')
-    name = serializers.ReadOnlyField(source='ingredients.name')
+    id = serializers.ReadOnlyField(source='ingredient.id')
+    name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
-        source='ingredients.measurement_unit'
+        source='ingredient.measurement_unit'
     )
 
     class Meta:
@@ -180,8 +195,8 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     author = CustomUserBaseSerializer(read_only=True)
     ingredients = IngredientInRecipeReadSerializer(
         many=True,
-        read_only=True,
-        source='ingredients_in_recipe'
+        source='ingredients_in_recipe',
+        read_only=True
     )
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
