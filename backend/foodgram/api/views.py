@@ -1,11 +1,17 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    IsAuthenticated,
+    AllowAny,
+    IsAuthenticatedOrReadOnly
+)
 from rest_framework.response import Response
 
 from recipes.models import Ingredients, Recipes, Tags
 from users.models import MyUser
+from .filters import RecipeFilter
 from .pagination import RecipePagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (
@@ -67,6 +73,8 @@ class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipes.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
     pagination_class = RecipePagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve', 'get-link'):
