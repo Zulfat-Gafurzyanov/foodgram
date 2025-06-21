@@ -3,6 +3,7 @@ from recipes.models import Recipes, Tags
 
 
 class RecipeFilter(FilterSet):
+    """Фильтр для рецептов по полям теги и автор."""
     tags = filters.ModelMultipleChoiceFilter(
         queryset=Tags.objects.all(),
         field_name='tags__slug',

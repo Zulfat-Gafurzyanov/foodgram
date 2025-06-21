@@ -1,4 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
+from django.http import Http404
 from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -83,6 +84,15 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    @action(detail=True, methods=['GET'],
+            url_path='get-link', url_name='get-link')
+    def get_link(self, request, pk=None):
+        """Получает короткую ссылку на рецепт."""
+        if not Recipes.objects.filter(pk=pk).exists():
+            raise Http404('Рецепт не найден')
+        url = request.build_absolute_uri(f'/recipes/{pk}/')
+        return Response({'short-link': url}, status=status.HTTP_200_OK)
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):

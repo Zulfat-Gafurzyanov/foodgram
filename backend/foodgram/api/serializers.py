@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from djoser.serializers import UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
@@ -89,7 +90,7 @@ class TagsSerializer(serializers.ModelSerializer):
 class IngredientInRecipeCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для ингредиентов при создании рецепта."""
     id = serializers.IntegerField()
-    amount = serializers.IntegerField()
+    amount = serializers.IntegerField(min_value=1)
 
     class Meta:
         model = IngredientInRecipe
@@ -114,19 +115,42 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                   'cooking_time')
 
     def validate_ingredients(self, value):
-        if len(value) != len({item['id'] for item in value}):
-            raise serializers.ValidationError('Дублируются ингредиенты.')
+        """
+        Валидиурет список ингредиентов на ввод,
+        дублирование, и наличие в базе.
+        """
+
         if not value:
             raise serializers.ValidationError(
                 'Укажите хотя бы один ингредиент для рецепта.')
+
+        unique_ingredients = set()
+        for ingredient in value:
+            if ingredient['id'] in unique_ingredients:
+                raise serializers.ValidationError(
+                    "Ингредиенты не должны повторяться."
+                )
+            unique_ingredients.add(ingredient["id"])
+
+        for ingredient in value:
+            try:
+                Ingredients.objects.get(id=ingredient['id'])
+            except ObjectDoesNotExist:
+                raise serializers.ValidationError(
+                    f'Ингредиенты с id {ingredient['id']} не существует')
+
         return value
 
     def validate_tags(self, value):
-        if len(value) != len(set(value)):
-            raise serializers.ValidationError('Использованы одинаковые теги.')
+        """Валидиурет список тегов на ввод и дублирование"""
+
         if not value:
             raise serializers.ValidationError(
                 'Укажите хотя бы один тег рецепта.')
+
+        if len(value) != len(set(value)):
+            raise serializers.ValidationError('Использованы одинаковые теги.')
+
         return value
 
     def to_representation(self, instance):
@@ -162,7 +186,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
         instance = super().update(instance, validated_data)
         instance.tags.set(tags)
-        instance.recipe_ingredients.all().delete()
+        instance.ingredients_in_recipe.all().delete()
         self.create_ingredients(ingredients, instance)
         return instance
 
