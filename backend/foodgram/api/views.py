@@ -1,6 +1,6 @@
-from django.db.models import Count, Prefetch
+from django.db.models import F, Sum
 from django_filters.rest_framework import DjangoFilterBackend
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from recipes.models import (
     Favorite,
     Ingredients,
+    IngredientInRecipe,
     Recipes,
     Tags,
     ShoppingCart
@@ -202,6 +203,34 @@ class RecipesViewSet(RecipeCreateDeleteMixin, viewsets.ModelViewSet):
             model=ShoppingCart,
             serializer_class=ShoppingCartSerializer,
         )
+
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[IsAuthenticated],
+        url_path='download_shopping_cart',
+        url_name='download_shopping_cart'
+    )
+    def download_shopping_cart(self, request):
+        """Получает файл в формате .txt с общим списком ингредиентов."""
+        # Получаем ингредиенты из рецептов в списке покупок пользователя.
+        ingredients = IngredientInRecipe.objects.filter(
+            recipe__in_shopping_cart__user=request.user
+        ).values(
+            name=F('ingredient__name'),
+            unit=F('ingredient__measurement_unit'),
+        ).annotate(
+            total=Sum('amount')
+        )
+        # Формируем строки для каждого ингредиента
+        lines = [
+            f'{ingredient['name']} - {ingredient['total']} '
+            f'({ingredient['unit']})'
+            for ingredient in ingredients
+        ]
+        content = "\\n".join(lines)
+        response = HttpResponse(content, content_type='text/plain')
+        return response
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):

@@ -231,6 +231,7 @@ class ShoppingCart(UserRecipe):
         ]
         verbose_name = 'список покупок'
         verbose_name_plural = 'списки покупок'
+        default_related_name = 'in_shopping_cart'
 
     def __str__(self):
         return f'{self.user.username}: в списке покупок: {self.recipe.name}'
