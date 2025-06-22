@@ -211,6 +211,7 @@ class Favorite(UserRecipe):
         ]
         verbose_name = 'избранный рецепт'
         verbose_name_plural = 'избранные рецепты'
+        default_related_name = 'favorite'
 
     def __str__(self):
         return f'{self.user.username}: избранный рецепт: {self.recipe.name}'
