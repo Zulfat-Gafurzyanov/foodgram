@@ -1,3 +1,4 @@
+from django.db.models import Count, Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
 from django.http import Http404
 from djoser.views import UserViewSet
@@ -10,18 +11,27 @@ from rest_framework.permissions import (
 )
 from rest_framework.response import Response
 
-from recipes.models import Ingredients, Recipes, Tags
-from users.models import MyUser
+from recipes.models import (
+    Favorite,
+    Ingredients,
+    Recipes,
+    Tags,
+    ShoppingCart
+)
+from users.models import MyUser, Subscribes
 from .filters import RecipeFilter
+from .mixins import RecipeCreateDeleteMixin
 from .pagination import RecipePagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (
     CustomUserBaseSerializer,
-    UserSubscribesSerializer,
+    FavoriteSerializer,
+    UserSubscribeSerializer,
     IngredientsSerializer,
     RecipeWriteSerializer,
     RecipeReadSerializer,
-    TagsSerializer
+    TagsSerializer,
+    ShoppingCartSerializer
 )
 
 
@@ -38,6 +48,8 @@ class CustomUserViewSet(UserViewSet):
     - api/users/{id}/subscribe/ - доступные методы: POST, DEL
     """
     queryset = MyUser.objects.all()
+    permission_classes = [IsAuthorOrReadOnly]
+    pagination_class = RecipePagination
 
     def get_serializers_class(self):
         """
@@ -46,6 +58,48 @@ class CustomUserViewSet(UserViewSet):
         if self.action in ['me', 'retrieve']:
             return CustomUserBaseSerializer
         return super().get_serializer_class()
+
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        permission_classes=[IsAuthenticated],
+        url_path='subscribe',
+        url_name='subscribe',
+    )
+    def subscribe(self, request, *args, **kwargs):
+        """Реализует логику подписки и отписки на пользователя."""
+        author = self.get_object()
+        user = request.user
+
+        if user == author:
+            return Response(
+                {'error': 'Нельзя подписаться на себя'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        # Проверка наличия подписки между текущим пользователем и автором.
+        subscription_exists = Subscribes.objects.filter(
+            user=user, author=author).exists()
+
+        if request.method == 'POST':
+            if subscription_exists:
+                return Response(
+                    {'error': 'Вы уже подписаны на этого пользователя'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            # Создаем подписку.
+            Subscribes.objects.create(user=user, author=author)
+            serializer = UserSubscribeSerializer(
+                author, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        elif request.method == 'DELETE':
+            if not subscription_exists:
+                return Response(
+                    {'error': 'Вы не подписаны на этого пользователя'},
+                    status=status.HTTP_400_BAD_REQUEST)
+
+            Subscribes.objects.filter(user=user, author=author).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,
@@ -60,17 +114,40 @@ class CustomUserViewSet(UserViewSet):
         В выдачу добавляются рецепты.
         """
         user = request.user
-        queryset = user.subscribers.all()
+        queryset = user.subscriber.all()
         pages = self.paginate_queryset(queryset)
-        serializer = UserSubscribesSerializer(
+        serializer = UserSubscribeSerializer(
             pages,
             many=True,
             context={'request': request}
         )
         return self.get_paginated_response(serializer.data)
 
+    @action(
+        detail=False,
+        methods=['put', 'delete'],
+        url_path='me/avatar',
+        url_name='me/avatar',
+    )
+    def avatar(self, request):
+        user = request.user
+        if request.method == 'PUT':
+            serializer = CustomUserBaseSerializer(
+                user,
+                data={'avatar': request.data.get('avatar')},
+                partial=True,
+                context={'request': request},
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(
+                {'avatar': user.avatar.url}, status=status.HTTP_200_OK
+            )
+        user.avatar.delete(save=True)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-class RecipesViewSet(viewsets.ModelViewSet):
+
+class RecipesViewSet(RecipeCreateDeleteMixin, viewsets.ModelViewSet):
     queryset = Recipes.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
     pagination_class = RecipePagination
@@ -85,14 +162,46 @@ class RecipesViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    @action(detail=True, methods=['GET'],
-            url_path='get-link', url_name='get-link')
+    @action(
+        detail=True,
+        methods=['GET'],
+        url_path='get-link',
+        url_name='get-link'
+    )
     def get_link(self, request, pk=None):
         """Получает короткую ссылку на рецепт."""
         if not Recipes.objects.filter(pk=pk).exists():
             raise Http404('Рецепт не найден')
         url = request.build_absolute_uri(f'/recipes/{pk}/')
         return Response({'short-link': url}, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        permission_classes=[IsAuthenticated],
+    )
+    def favorite(self, request, pk=None):
+        return self.perform_action(
+            request=request,
+            pk=pk,
+            model=Favorite,
+            serializer_class=FavoriteSerializer
+        )
+
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        permission_classes=[IsAuthenticated],
+        url_path='shopping_cart',
+        url_name='shopping_cart',
+    )
+    def shopping_cart(self, request, pk=None):
+        return self.perform_action(
+            request=request,
+            pk=pk,
+            model=ShoppingCart,
+            serializer_class=ShoppingCartSerializer,
+        )
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
