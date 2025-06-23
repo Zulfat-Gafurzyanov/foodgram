@@ -180,4 +180,3 @@ jobs:
                 Автор: ${{ github.actor }}
                 Коммит: ${{ github.event.commits[0].message }}
                 CСылка на коммит: https://github.com/${{ github.repository }}/commit/${{github.sha}} 
-        parse_mode: markdo 
