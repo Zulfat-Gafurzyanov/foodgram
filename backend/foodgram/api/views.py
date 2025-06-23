@@ -101,25 +101,25 @@ class CustomUserViewSet(UserViewSet):
         """
         user = request.user
         authors = (
-            MyUser.objects.filter(followers__user=user)
+            MyUser.objects.filter(subscriber__user=user)
             .prefetch_related(
                 Prefetch(
-                    "recipes",
-                    queryset=Recipes.objects.order_by("-pub_date").only(
-                        "id", "name", "image", "cooking_time"
+                    'recipes',
+                    queryset=Recipes.objects.order_by('-pub_date').only(
+                        'id', 'name', 'image', 'cooking_time'
                     ),
                 )
             )
-            .annotate(recipes_count=Count("recipes"))
+            .annotate(recipes_count=Count('recipes'))
         )
         page = self.paginate_queryset(authors)
         if page is not None:
             serializer = UserSubscribeSerializer(
-                page, many=True, context={"request": request}
+                page, many=True, context={'request': request}
             )
             return self.get_paginated_response(serializer.data)
         serializer = UserSubscribeSerializer(
-            authors, many=True, context={"request": request}
+            authors, many=True, context={'request': request}
         )
         return Response(serializer.data)
 
@@ -224,11 +224,11 @@ class RecipesViewSet(RecipeCreateDeleteMixin, viewsets.ModelViewSet):
         )
         # Формируем строки для каждого ингредиента
         lines = [
-            f'{ingredient['name']} - {ingredient['total']} '
-            f'({ingredient['unit']})'
+            f"{ingredient['name']} - {ingredient['total']} "
+            f"({ingredient['unit']})"
             for ingredient in ingredients
         ]
-        content = "\\n".join(lines)
+        content = '\\n'.join(lines)
         response = HttpResponse(content, content_type='text/plain')
         return response
 
