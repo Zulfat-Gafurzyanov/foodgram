@@ -139,6 +139,7 @@ class RecipesViewSet(RecipeCreateDeleteMixin, viewsets.ModelViewSet):
     pagination_class = RecipePagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
+    search_fields = ("^name", "name")
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve', 'get-link'):
