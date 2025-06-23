@@ -1,4 +1,4 @@
-from django.db.models import F, Sum
+from django.db.models import Count, F, Prefetch, Sum
 from django.http import Http404, HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
@@ -100,14 +100,28 @@ class CustomUserViewSet(UserViewSet):
         В выдачу добавляются рецепты.
         """
         user = request.user
-        queryset = user.subscriber.all()
-        pages = self.paginate_queryset(queryset)
-        serializer = UserSubscribeSerializer(
-            pages,
-            many=True,
-            context={'request': request}
+        authors = (
+            MyUser.objects.filter(followers__user=user)
+            .prefetch_related(
+                Prefetch(
+                    "recipes",
+                    queryset=Recipes.objects.order_by("-pub_date").only(
+                        "id", "name", "image", "cooking_time"
+                    ),
+                )
+            )
+            .annotate(recipes_count=Count("recipes"))
         )
-        return self.get_paginated_response(serializer.data)
+        page = self.paginate_queryset(authors)
+        if page is not None:
+            serializer = UserSubscribeSerializer(
+                page, many=True, context={"request": request}
+            )
+            return self.get_paginated_response(serializer.data)
+        serializer = UserSubscribeSerializer(
+            authors, many=True, context={"request": request}
+        )
+        return Response(serializer.data)
 
     @action(
         detail=False,
