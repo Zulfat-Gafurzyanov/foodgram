@@ -11,6 +11,12 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'default-secret-key')
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
+CSRF_TRUSTED_ORIGINS = [
+    f"https://{os.getenv("DOMAIN")}",
+    f"http://{os.getenv("DOMAIN")}",
+]
+CSRF_COOKIE_SECURE = True
+
 ALLOWED_HOSTS = [
     os.getenv("HOST_IP"),
     os.getenv("DOMAIN"),
