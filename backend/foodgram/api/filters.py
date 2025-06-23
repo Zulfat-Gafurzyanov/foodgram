@@ -1,5 +1,5 @@
 from django_filters.rest_framework import FilterSet, filters
-from recipes.models import Recipes, Tags
+from recipes.models import Ingredients, Recipes, Tags
 
 
 class RecipeFilter(FilterSet):
@@ -50,3 +50,12 @@ class RecipeFilter(FilterSet):
     class Meta:
         model = Recipes
         fields = ('tags', 'author', 'is_in_shopping_cart', 'is_favorited')
+
+
+class IngredientFilter(FilterSet):
+    """Фильтр для ингредиентов по имени."""
+    name = filters.CharFilter(field_name='name', lookup_expr='istartswith')
+
+    class Meta:
+        model = Ingredients
+        fields = ['name']

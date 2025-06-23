@@ -11,7 +11,7 @@ from rest_framework.permissions import (AllowAny, IsAuthenticated,
 from rest_framework.response import Response
 from users.models import MyUser, Subscribes
 
-from .filters import RecipeFilter
+from .filters import IngredientFilter, RecipeFilter
 from .mixins import RecipeCreateDeleteMixin
 from .pagination import RecipePagination
 from .permissions import IsAuthorOrReadOnly
@@ -139,7 +139,7 @@ class RecipesViewSet(RecipeCreateDeleteMixin, viewsets.ModelViewSet):
     pagination_class = RecipePagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-    search_fields = ("^name", "name")
+    search_fields = ('^name', 'name')
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve', 'get-link'):
@@ -232,6 +232,8 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredients.objects.all()
     serializer_class = IngredientsSerializer
     permission_classes = (AllowAny,)
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = IngredientFilter
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
