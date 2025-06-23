@@ -1,7 +1,7 @@
 from django.core.exceptions import ObjectDoesNotExist
-from djoser.serializers import UserCreateSerializer
-from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
+from drf_extra_fields.fields import Base64ImageField
+from djoser.serializers import UserCreateSerializer
 
 from recipes.models import (
     Favorite,
