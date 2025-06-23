@@ -39,7 +39,7 @@ jobs:
         python -m flake8 backend/
 
     - name: Run Django tests
-      working-directory: backend/
+      working-directory: backend/foodgram/
       env:
         POSTGRES_USER: django_user
         POSTGRES_PASSWORD: django_password
