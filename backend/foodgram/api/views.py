@@ -2,23 +2,38 @@ from django.db.models import Count, F, Prefetch, Sum
 from django.http import Http404, HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import (Favorite, IngredientInRecipe, Ingredients, Recipes,
-                            ShoppingCart, Tags)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly
+)
 from rest_framework.response import Response
-from users.models import MyUser, Subscribes
 
-from .filters import IngredientFilter, RecipeFilter
-from .mixins import RecipeCreateDeleteMixin
-from .pagination import RecipePagination
-from .permissions import IsAuthorOrReadOnly
-from .serializers import (CustomUserBaseSerializer, FavoriteSerializer,
-                          IngredientsSerializer, RecipeReadSerializer,
-                          RecipeWriteSerializer, ShoppingCartSerializer,
-                          TagsSerializer, UserSubscribeSerializer)
+from api.filters import IngredientFilter, RecipeFilter
+from api.mixins import RecipeCreateDeleteMixin
+from api.pagination import RecipePagination
+from api.permissions import IsAuthorOrReadOnly
+from api.serializers import (
+    CustomUserBaseSerializer,
+    FavoriteSerializer,
+    IngredientsSerializer,
+    RecipeReadSerializer,
+    RecipeWriteSerializer,
+    ShoppingCartSerializer,
+    TagsSerializer,
+    UserSubscribeSerializer
+)
+from recipes.models import (
+    Favorite,
+    IngredientInRecipe,
+    Ingredients,
+    Recipes,
+    ShoppingCart,
+    Tags
+)
+from users.models import MyUser, Subscribes
 
 
 class CustomUserViewSet(UserViewSet):
