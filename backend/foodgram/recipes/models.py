@@ -1,7 +1,15 @@
 from django.core.validators import MinValueValidator
 from django.db import models
 
-from users.models import MyUser
+from foodgram.constants import (
+    MAX_LENGTH_INGREDIENT_NAME,
+    MAX_LENGTH_MEASUREMENT_UNIT,
+    MAX_LENGTH_RECIPE_NAME,
+    MAX_LENGTH_TAG_NAME,
+    MAX_LENGTH_TAG_SLUG,
+    MIN_VALUE_COOKING_TIME
+)
+from users.models import CustomUser
 
 
 class Ingredients(models.Model):
@@ -12,11 +20,11 @@ class Ingredients(models.Model):
     """
     name = models.CharField(
         'название ингредиента',
-        max_length=128
+        max_length=MAX_LENGTH_INGREDIENT_NAME
     )
     measurement_unit = models.CharField(
         'единица измерения',
-        max_length=64
+        max_length=MAX_LENGTH_MEASUREMENT_UNIT
     )
 
     class Meta:
@@ -42,12 +50,12 @@ class Tags(models.Model):
     """
     name = models.CharField(
         'название тега',
-        max_length=32,
+        max_length=MAX_LENGTH_TAG_NAME,
         unique=True
     )
     slug = models.SlugField(
         'слаг',
-        max_length=32,
+        max_length=MAX_LENGTH_TAG_SLUG,
         unique=True
     )
 
@@ -73,7 +81,7 @@ class Recipes(models.Model):
 
     name = models.CharField(
         'название рецепта',
-        max_length=256
+        max_length=MAX_LENGTH_RECIPE_NAME
     )
     image = models.ImageField(
         'изображение рецепта',
@@ -84,10 +92,10 @@ class Recipes(models.Model):
     )
     cooking_time = models.PositiveSmallIntegerField(
         'время приготовления',
-        validators=[MinValueValidator(1)]
+        validators=[MinValueValidator(MIN_VALUE_COOKING_TIME)]
     )
     author = models.ForeignKey(
-        MyUser,
+        CustomUser,
         verbose_name='автор рецепта',
         related_name='recipes',
         on_delete=models.CASCADE
@@ -156,7 +164,7 @@ class UserRecipe(models.Model):
     Абстрактная модель для описания полей пользователя и рецепта.
     """
     user = models.ForeignKey(
-        MyUser,
+        CustomUser,
         verbose_name='пользователь',
         on_delete=models.CASCADE
     )

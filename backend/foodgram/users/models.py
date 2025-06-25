@@ -1,8 +1,15 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from foodgram.constants import (
+    MAX_LENGTH_EMAIL,
+    MAX_LENGTH_FIRSTNAME,
+    MAX_LENGTH_SECONDNAME,
+    MAX_LENGTH_USERNAME
+)
 
-class MyUser(AbstractUser):
+
+class CustomUser(AbstractUser):
     """
     Модель для хранения данных о пользователе.
 
@@ -11,21 +18,21 @@ class MyUser(AbstractUser):
     """
     username = models.CharField(
         'юзернейм',
-        max_length=150,
+        max_length=MAX_LENGTH_USERNAME,
         unique=True
     )
     email = models.EmailField(
         'электронная почта',
-        max_length=254,
+        max_length=MAX_LENGTH_EMAIL,
         unique=True
     )
     first_name = models.CharField(
         'имя',
-        max_length=150
+        max_length=MAX_LENGTH_FIRSTNAME
     )
     last_name = models.CharField(
         'фамилия',
-        max_length=150
+        max_length=MAX_LENGTH_SECONDNAME
     )
     avatar = models.ImageField(
         'аватар',
@@ -33,6 +40,9 @@ class MyUser(AbstractUser):
         null=True,
         blank=True
     )
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
 
     class Meta:
         ordering = ['username']
@@ -51,13 +61,13 @@ class Subscribes(models.Model):
     модели MyUser.
     """
     user = models.ForeignKey(
-        MyUser,
+        CustomUser,
         verbose_name='подписчик',
         related_name='subscribers',
         on_delete=models.CASCADE
     )
     author = models.ForeignKey(
-        MyUser,
+        CustomUser,
         verbose_name='автор рецепта',
         related_name='subscriber',
         on_delete=models.CASCADE
