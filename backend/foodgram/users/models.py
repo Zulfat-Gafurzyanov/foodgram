@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
 from django.db import models
 
 from foodgram.constants import (
@@ -7,6 +8,9 @@ from foodgram.constants import (
     MAX_LENGTH_SECONDNAME,
     MAX_LENGTH_USERNAME
 )
+
+username_validator = RegexValidator(
+    r'^[\\w.@+-]+$', 'Имя не может содержать спецсимволы, кроме _, @, +, ., -')
 
 
 class CustomUser(AbstractUser):
@@ -19,7 +23,8 @@ class CustomUser(AbstractUser):
     username = models.CharField(
         'юзернейм',
         max_length=MAX_LENGTH_USERNAME,
-        unique=True
+        unique=True,
+        validators=[username_validator]
     )
     email = models.EmailField(
         'электронная почта',
@@ -84,6 +89,10 @@ class Subscribes(models.Model):
                 fields=('user', 'author'),
                 name='unique_subscribes'
             ),
+            models.CheckConstraint(
+                check=~models.Q(user=models.F('author')),
+                name='prevent_self_follow'
+            )
         )
 
     def __str__(self):
