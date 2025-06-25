@@ -23,6 +23,12 @@ class Ingredients(models.Model):
         ordering = ['id']
         verbose_name = 'ингредиент'
         verbose_name_plural = 'ингредиенты'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'measurement_unit'],
+                name='unique_name_measurement_unit'
+            )
+        ]
 
     def __str__(self):
         return self.name
@@ -76,7 +82,7 @@ class Recipes(models.Model):
     text = models.TextField(
         'описание рецепта'
     )
-    cooking_time = models.PositiveIntegerField(
+    cooking_time = models.PositiveSmallIntegerField(
         'время приготовления',
         validators=[MinValueValidator(1)]
     )
@@ -136,45 +142,13 @@ class IngredientInRecipe(models.Model):
         # одного и того же ингредиента для рецепта.
         constraints = (
             models.UniqueConstraint(
-                fields=('ingredient', 'recipe'),
+                fields=['ingredient', 'recipe'],
                 name='unique_ingredient_recipe',
             ),
         )
 
     def __str__(self):
         return f'Ингридиент {self.recipe.name}: {self.ingredient.name}'
-
-
-class TagsOfRecipe(models.Model):
-    """
-    Промежуточная модель.
-
-    Предназначена для определения связи ManyToManyField между моделями
-    Tags и Recipes.
-    """
-    tag = models.ForeignKey(
-        Tags,
-        verbose_name='тег',
-        on_delete=models.CASCADE
-    )
-    recipe = models.ForeignKey(
-        Recipes,
-        verbose_name='рецепт',
-        on_delete=models.CASCADE
-    )
-
-    class Meta:
-        verbose_name = 'тег рецепта'
-        verbose_name_plural = 'теги рецепта'
-        # Уникальное ограничение, чтобы избежать дублирования
-        # одного и того же тега для рецепта.
-        constraints = [
-            models.UniqueConstraint(
-                fields=['tag', 'recipe'], name='unique_tag_recipe')
-        ]
-
-    def __str__(self):
-        return f'Тег {self.recipe.name}: {self.tag.name}'
 
 
 class UserRecipe(models.Model):
@@ -194,6 +168,12 @@ class UserRecipe(models.Model):
 
     class Meta:
         abstract = True
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_user_recipe'
+            )
+        ]
 
 
 class Favorite(UserRecipe):
@@ -203,12 +183,6 @@ class Favorite(UserRecipe):
     Связана с моделью MyUser (ForeignKey), Recipes (ForeignKey).
     """
     class Meta:
-        # Уникальное ограничение, чтобы избежать дублирования
-        # одного и того же рецепта в избранном.
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'recipe'], name='unique_favorite')
-        ]
         verbose_name = 'избранный рецепт'
         verbose_name_plural = 'избранные рецепты'
         default_related_name = 'favorite'
@@ -224,12 +198,6 @@ class ShoppingCart(UserRecipe):
     Связана с моделью MyUser (ForeignKey), Recipes (ForeignKey).
     """
     class Meta:
-        # Уникальное ограничение, чтобы избежать дублирования
-        # одного и того же рецепта в списке покупок.
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'recipe'], name='shopping_cart')
-        ]
         verbose_name = 'список покупок'
         verbose_name_plural = 'списки покупок'
         default_related_name = 'in_shopping_cart'
