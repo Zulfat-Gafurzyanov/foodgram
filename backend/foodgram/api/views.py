@@ -1,6 +1,7 @@
 from django.db.models import Count, F, Prefetch, Sum
 from django.http import Http404, HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -16,13 +17,13 @@ from api.mixins import RecipeCreateDeleteMixin
 from api.pagination import RecipePagination
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
-    UserSerializer,
     FavoriteSerializer,
     IngredientsSerializer,
     RecipeReadSerializer,
     RecipeWriteSerializer,
     ShoppingCartSerializer,
     TagsSerializer,
+    UserSerializer,
     UserSubscribeSerializer
 )
 from recipes.models import (
@@ -36,7 +37,7 @@ from recipes.models import (
 from users.models import CustomUser, Subscribes
 
 
-class CustomUserViewSet(UserViewSet):
+class UserAccauntViewSet(UserViewSet):
     """
     Вьюсет для работы с пользователями.
 
@@ -71,36 +72,29 @@ class CustomUserViewSet(UserViewSet):
         """Реализует логику подписки и отписки на пользователя."""
         author = self.get_object()
         user = request.user
-
-        if user == author:
-            return Response(
-                {'error': 'Нельзя подписаться на себя'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        # Проверка наличия подписки между текущим пользователем и автором.
-        subscription_exists = Subscribes.objects.filter(
-            user=user, author=author).exists()
-
-        if request.method == 'POST':
-            if subscription_exists:
-                return Response(
-                    {'error': 'Вы уже подписаны на этого пользователя'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            # Создаем подписку.
-            Subscribes.objects.create(user=user, author=author)
+        subscription_data = {'user': user.id, 'author': author.id}
+        try:
             serializer = UserSubscribeSerializer(
-                author, context={'request': request})
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+                data=subscription_data,
+                context={'request': request}
+            )
+            serializer.is_valid(raise_exception=True)
 
-        elif request.method == 'DELETE':
-            if not subscription_exists:
+            if request.method == 'POST':
+                serializer.save()
                 return Response(
-                    {'error': 'Вы не подписаны на этого пользователя'},
-                    status=status.HTTP_400_BAD_REQUEST)
+                    {f'Подписались на {author.username}'},
+                    status=status.HTTP_201_CREATED
+                )
+            elif request.method == 'DELETE':
+                Subscribes.objects.filter(user=user, author=author).delete()
+                return Response(
+                    {f'Отписались от {author.username}'},
+                    status=status.HTTP_204_NO_CONTENT
+                )
 
-            Subscribes.objects.filter(user=user, author=author).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         detail=False,
@@ -175,9 +169,6 @@ class RecipesViewSet(RecipeCreateDeleteMixin, viewsets.ModelViewSet):
             return RecipeReadSerializer
         return RecipeWriteSerializer
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-
     @action(
         detail=True,
         methods=['GET'],
@@ -186,9 +177,10 @@ class RecipesViewSet(RecipeCreateDeleteMixin, viewsets.ModelViewSet):
     )
     def get_link(self, request, pk=None):
         """Получает короткую ссылку на рецепт."""
+        recipe=get_object_or_404(Recipes, pk=pk)
         if not Recipes.objects.filter(pk=pk).exists():
             raise Http404('Рецепт не найден')
-        url = request.build_absolute_uri(f'/recipes/{pk}/')
+        url = request.build_absolute_uri(f'/recipes/{recipe.pk}/')
         return Response({'short-link': url}, status=status.HTTP_200_OK)
 
     @action(

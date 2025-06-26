@@ -1,5 +1,4 @@
 from django.core.exceptions import ObjectDoesNotExist
-from djoser.serializers import UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
@@ -12,7 +11,7 @@ from recipes.models import (
     Tags,
     UserRecipe
 )
-from users.models import MyUser, Subscribes
+from users.models import CustomUser, Subscribes
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -21,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
     avatar = Base64ImageField(required=False)
 
     class Meta:
-        model = MyUser
+        model = CustomUser
         fields = ('email', 'id', 'username', 'first_name', 'last_name',
                   'is_subscribed', 'avatar')
 
@@ -54,6 +53,33 @@ class UserSubscribeSerializer(UserSerializer):
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
+
+    def validate(self, data):
+        """Валидатор для проверки условий подписки."""
+        user = self.context['request'].user
+        author = data.get('author')
+
+        # Проверка подписки на самого себя.
+        if user == author:
+            raise serializers.ValidationError(
+                'Нельзя подписываться на самого себя.'
+            )
+
+        # Проверка повторной подписки.
+        existing_subscription = Subscribes.objects.filter(
+            user=user, author=author
+        ).exists()
+        method = self.context['request'].method.lower()
+        if method == 'post' and existing_subscription:
+            raise serializers.ValidationError(
+                'Вы уже подписаны на этого пользователя.'
+            )
+        elif method == 'delete' and not existing_subscription:
+            raise serializers.ValidationError(
+                'Вы не подписаны на этого пользователя.'
+            )
+
+        return data
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
@@ -168,7 +194,8 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         """Создает рецепт."""
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        recipe = Recipes.objects.create(**validated_data)
+        user = self.context.get('request').user
+        recipe = Recipes.objects.create(**validated_data, author=user)
         recipe.tags.set(tags)
         self.create_ingredients(ingredients, recipe)
         return recipe
