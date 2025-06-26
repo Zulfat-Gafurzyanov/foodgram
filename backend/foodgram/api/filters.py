@@ -1,6 +1,7 @@
 from django_filters.rest_framework import FilterSet, filters
+from rest_framework.filters import SearchFilter
 
-from recipes.models import Ingredients, Recipes, Tags
+from recipes.models import Recipes, Tags
 
 
 class RecipeFilter(FilterSet):
@@ -52,6 +53,6 @@ class RecipeFilter(FilterSet):
         fields = ('tags', 'author', 'is_in_shopping_cart', 'is_favorited')
 
 
-class IngredientFilter(filters.SearchFilter):
+class IngredientFilter(SearchFilter):
     """Фильтр для ингредиентов по имени."""
     search_fields = ['name']
