@@ -16,7 +16,6 @@ class RecipeFilter(FilterSet):
         field_name='tags__slug',
         to_field_name='slug',
     )
-    author = filters.NumberFilter(field_name='author__id')
     is_in_shopping_cart = filters.BooleanFilter(
         method='check_recipe_in_favorite_or_cart'
     )
@@ -53,10 +52,6 @@ class RecipeFilter(FilterSet):
         fields = ('tags', 'author', 'is_in_shopping_cart', 'is_favorited')
 
 
-class IngredientFilter(FilterSet):
+class IngredientFilter(filters.SearchFilter):
     """Фильтр для ингредиентов по имени."""
-    name = filters.CharFilter(field_name='name', lookup_expr='istartswith')
-
-    class Meta:
-        model = Ingredients
-        fields = ['name']
+    search_fields = ['name']
