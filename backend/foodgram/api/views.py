@@ -16,7 +16,7 @@ from api.mixins import RecipeCreateDeleteMixin
 from api.pagination import RecipePagination
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
-    CustomUserBaseSerializer,
+    UserSerializer,
     FavoriteSerializer,
     IngredientsSerializer,
     RecipeReadSerializer,
@@ -33,7 +33,7 @@ from recipes.models import (
     ShoppingCart,
     Tags
 )
-from users.models import MyUser, Subscribes
+from users.models import CustomUser, Subscribes
 
 
 class CustomUserViewSet(UserViewSet):
@@ -48,7 +48,7 @@ class CustomUserViewSet(UserViewSet):
     - api/users/subscriptions/ - доступные методы: GET
     - api/users/{id}/subscribe/ - доступные методы: POST, DEL
     """
-    queryset = MyUser.objects.all()
+    queryset = CustomUser.objects.all()
     permission_classes = [IsAuthorOrReadOnly]
     pagination_class = RecipePagination
 
@@ -57,7 +57,7 @@ class CustomUserViewSet(UserViewSet):
         Выбираем сериализатор для обработки профиля или текущего пользователя.
         """
         if self.action in ['me', 'retrieve']:
-            return CustomUserBaseSerializer
+            return UserSerializer
         return super().get_serializer_class()
 
     @action(
@@ -116,7 +116,7 @@ class CustomUserViewSet(UserViewSet):
         """
         user = request.user
         authors = (
-            MyUser.objects.filter(subscriber__user=user)
+            CustomUser.objects.filter(subscriber__user=user)
             .prefetch_related(
                 Prefetch(
                     'recipes',
@@ -147,7 +147,7 @@ class CustomUserViewSet(UserViewSet):
     def avatar(self, request):
         user = request.user
         if request.method == 'PUT':
-            serializer = CustomUserBaseSerializer(
+            serializer = UserSerializer(
                 user,
                 data={'avatar': request.data.get('avatar')},
                 partial=True,

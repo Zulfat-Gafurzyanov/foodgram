@@ -15,7 +15,7 @@ from recipes.models import (
 from users.models import MyUser, Subscribes
 
 
-class CustomUserBaseSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     """Базовый сериализатор для пользователей."""
     is_subscribed = serializers.SerializerMethodField()
     avatar = Base64ImageField(required=False)
@@ -33,22 +33,13 @@ class CustomUserBaseSerializer(serializers.ModelSerializer):
         return Subscribes.objects.filter(user=user, author=obj).exists()
 
 
-class CustomUserCreateSerializer(UserCreateSerializer):
-    """Cериализатор для создания пользователей."""
-
-    class Meta:
-        model = MyUser
-        fields = ('email', 'id', 'username', 'first_name', 'last_name',
-                  'password')
-
-
-class UserSubscribeSerializer(CustomUserBaseSerializer):
+class UserSubscribeSerializer(UserSerializer):
     """Сериализатор для создания подписки на пользователей."""
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
-    class Meta(CustomUserBaseSerializer.Meta):
-        fields = CustomUserBaseSerializer.Meta.fields + (
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields + (
             "recipes",
             "recipes_count",
         )
@@ -215,7 +206,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     """
 
     tags = TagsSerializer(many=True, read_only=True)
-    author = CustomUserBaseSerializer(read_only=True)
+    author = UserSerializer(read_only=True)
     ingredients = IngredientInRecipeReadSerializer(
         many=True,
         source='ingredients_in_recipe',
