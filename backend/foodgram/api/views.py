@@ -1,7 +1,7 @@
 from django.db.models import Count, F, Prefetch, Sum
 from django.http import Http404, HttpResponse
-from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -177,7 +177,7 @@ class RecipesViewSet(RecipeCreateDeleteMixin, viewsets.ModelViewSet):
     )
     def get_link(self, request, pk=None):
         """Получает короткую ссылку на рецепт."""
-        recipe=get_object_or_404(Recipes, pk=pk)
+        recipe = get_object_or_404(Recipes, pk=pk)
         if not Recipes.objects.filter(pk=pk).exists():
             raise Http404('Рецепт не найден')
         url = request.build_absolute_uri(f'/recipes/{recipe.pk}/')
