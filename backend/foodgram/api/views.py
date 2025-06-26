@@ -261,8 +261,9 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredients.objects.all()
     serializer_class = IngredientsSerializer
     permission_classes = (AllowAny,)
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = (IngredientFilter,)
     filterset_class = IngredientFilter
+    search_fields = ('^name',)
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
