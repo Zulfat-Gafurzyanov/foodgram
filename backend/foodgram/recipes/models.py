@@ -190,7 +190,7 @@ class Favorite(UserRecipe):
 
     Связана с моделью MyUser (ForeignKey), Recipes (ForeignKey).
     """
-    class Meta:
+    class Meta(UserRecipe.Meta):
         verbose_name = 'избранный рецепт'
         verbose_name_plural = 'избранные рецепты'
         default_related_name = 'favorite'
@@ -205,7 +205,7 @@ class ShoppingCart(UserRecipe):
 
     Связана с моделью MyUser (ForeignKey), Recipes (ForeignKey).
     """
-    class Meta:
+    class Meta(UserRecipe.Meta):
         verbose_name = 'список покупок'
         verbose_name_plural = 'списки покупок'
         default_related_name = 'in_shopping_cart'
