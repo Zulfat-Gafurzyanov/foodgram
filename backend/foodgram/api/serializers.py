@@ -11,7 +11,7 @@ from recipes.models import (
     Tags,
     UserRecipe
 )
-from users.models import CustomUser, Subscribes
+from users.models import User, Subscribes
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -20,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
     avatar = Base64ImageField(required=False)
 
     class Meta:
-        model = CustomUser
+        model = User
         fields = ('email', 'id', 'username', 'first_name', 'last_name',
                   'is_subscribed', 'avatar')
 

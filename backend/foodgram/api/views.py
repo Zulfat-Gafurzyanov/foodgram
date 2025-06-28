@@ -34,7 +34,7 @@ from recipes.models import (
     ShoppingCart,
     Tags
 )
-from users.models import CustomUser, Subscribes
+from users.models import User, Subscribes
 
 
 class UserAccauntViewSet(UserViewSet):
@@ -49,7 +49,7 @@ class UserAccauntViewSet(UserViewSet):
     - api/users/subscriptions/ - доступные методы: GET
     - api/users/{id}/subscribe/ - доступные методы: POST, DEL
     """
-    queryset = CustomUser.objects.all()
+    queryset = User.objects.all()
     permission_classes = [IsAuthorOrReadOnly]
     pagination_class = RecipePagination
 
@@ -110,7 +110,7 @@ class UserAccauntViewSet(UserViewSet):
         """
         user = request.user
         authors = (
-            CustomUser.objects.filter(subscriber__user=user)
+            User.objects.filter(subscriber__user=user)
             .prefetch_related(
                 Prefetch(
                     'recipes',

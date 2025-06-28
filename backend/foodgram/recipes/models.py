@@ -9,7 +9,7 @@ from foodgram.constants import (
     MAX_LENGTH_TAG_SLUG,
     MIN_VALUE_COOKING_TIME
 )
-from users.models import CustomUser
+from users.models import User
 
 
 class Ingredients(models.Model):
@@ -95,7 +95,7 @@ class Recipes(models.Model):
         validators=[MinValueValidator(MIN_VALUE_COOKING_TIME)]
     )
     author = models.ForeignKey(
-        CustomUser,
+        User,
         verbose_name='автор рецепта',
         related_name='recipes',
         on_delete=models.CASCADE
@@ -164,7 +164,7 @@ class UserRecipe(models.Model):
     Абстрактная модель для описания полей пользователя и рецепта.
     """
     user = models.ForeignKey(
-        CustomUser,
+        User,
         verbose_name='пользователь',
         on_delete=models.CASCADE
     )
@@ -179,7 +179,7 @@ class UserRecipe(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
-                name='unique_user_recipe'
+                name='%(app_label)s_%(class)s_unique'
             )
         ]
 
