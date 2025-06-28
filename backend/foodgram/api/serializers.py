@@ -11,7 +11,7 @@ from recipes.models import (
     Tags,
     UserRecipe
 )
-from users.models import User, Subscribes
+from users.models import Subscribes, User
 
 
 class UserSerializer(serializers.ModelSerializer):

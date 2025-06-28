@@ -34,7 +34,7 @@ from recipes.models import (
     ShoppingCart,
     Tags
 )
-from users.models import User, Subscribes
+from users.models import Subscribes, User
 
 
 class UserAccauntViewSet(UserViewSet):
