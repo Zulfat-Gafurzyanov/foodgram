@@ -18,8 +18,8 @@ class IngredientInRecipeInline(admin.TabularInline):
 
 @admin.register(Recipes)
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'author', 'favorites_count')
-    search_fields = ('name', 'author__username', 'author__email')
+    list_display = ('id', 'name', 'text', 'author', 'favorite_count')
+    search_fields = ('name', 'author')
     list_filter = ('tags',)
     inlines = (IngredientInRecipeInline,)
 
@@ -29,7 +29,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
 @admin.register(Ingredients)
 class IngredientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'measurement_unit')
+    list_display = ('id', 'name', 'measurement_unit')
     search_fields = ('name',)
 
 
