@@ -31,19 +31,6 @@ class UserSerializer(serializers.ModelSerializer):
             return False
         return Subscribes.objects.filter(user=user, author=obj).exists()
 
-    def validate(self, attrs):
-        """Проверяет наличие обязательных полей."""
-        required_fields = {'email', 'username', 'first_name', 'last_name'}
-        missing_fields = set()
-        for field in required_fields:
-            if field not in attrs:
-                missing_fields.add(field)
-        if missing_fields:
-            raise serializers.ValidationError(
-                f"Поле '{field}' является обязательным."
-            )
-        return attrs
-
 
 class UserSubscribeSerializer(UserSerializer):
     """Сериализатор для создания подписки на пользователей."""

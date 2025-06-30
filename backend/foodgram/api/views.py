@@ -96,28 +96,14 @@ class UserAccauntViewSet(UserViewSet):
         В выдачу добавляются рецепты.
         """
         user = request.user
-        authors = (
-            User.objects.filter(subscriber__user=user)
-            .prefetch_related(
-                Prefetch(
-                    'recipes',
-                    queryset=Recipes.objects.order_by('-pub_date').only(
-                        'id', 'name', 'image', 'cooking_time'
-                    ),
-                )
-            )
-            .annotate(recipes_count=Count('recipes'))
-        )
-        page = self.paginate_queryset(authors)
-        if page is not None:
-            serializer = UserSubscribeSerializer(
-                page, many=True, context={'request': request}
-            )
-            return self.get_paginated_response(serializer.data)
+        queryset = user.subscribers.all()
+        pages = self.paginate_queryset(queryset)
         serializer = UserSubscribeSerializer(
-            authors, many=True, context={'request': request}
+            pages,
+            many=True,
+            context={'request': request}
         )
-        return Response(serializer.data)
+        return self.get_paginated_response(serializer.data)
 
     @action(
         detail=False,
