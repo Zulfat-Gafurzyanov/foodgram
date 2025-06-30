@@ -12,3 +12,6 @@ MAX_LENGTH_TAG_SLUG = 32
 MIN_VALUE_COOKING_TIME = 1
 # Константы для приложения API:
 PAGE_SIZE = 6
+# Константы для админ-зоны:
+EXTRA_INGREDIENT = 1
+MIN_NUM_INGREDIENT = 1

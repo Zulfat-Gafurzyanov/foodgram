@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from foodgram.constants import EXTRA_INGREDIENT, MIN_NUM_INGREDIENT
 from recipes.models import (
     Favorite,
     IngredientInRecipe,
@@ -13,7 +14,8 @@ from users.models import Subscribes
 
 class IngredientInRecipeInline(admin.TabularInline):
     model = IngredientInRecipe
-    extra = 1
+    extra = EXTRA_INGREDIENT
+    min_num = MIN_NUM_INGREDIENT
 
 
 @admin.register(Recipes)
