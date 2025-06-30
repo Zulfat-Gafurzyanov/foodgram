@@ -1,4 +1,4 @@
-from django.db.models import F, Sum
+from django.db.models import Count, F, Prefetch, Sum
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -81,7 +81,7 @@ class UserAccauntViewSet(UserViewSet):
 
         elif request.method == 'DELETE':
             Subscribes.objects.filter(user=user, author=author).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,
@@ -96,14 +96,28 @@ class UserAccauntViewSet(UserViewSet):
         В выдачу добавляются рецепты.
         """
         user = request.user
-        queryset = user.subscribers.all()
-        pages = self.paginate_queryset(queryset)
-        serializer = UserSubscribeSerializer(
-            pages,
-            many=True,
-            context={'request': request}
+        authors = (
+            User.objects.filter(subscriber__user=user)
+            .prefetch_related(
+                Prefetch(
+                    'recipes',
+                    queryset=Recipes.objects.order_by('-pub_date').only(
+                        'id', 'name', 'image', 'cooking_time'
+                    ),
+                )
+            )
+            .annotate(recipes_count=Count('recipes'))
         )
-        return self.get_paginated_response(serializer.data)
+        page = self.paginate_queryset(authors)
+        if page is not None:
+            serializer = UserSubscribeSerializer(
+                page, many=True, context={'request': request}
+            )
+            return self.get_paginated_response(serializer.data)
+        serializer = UserSubscribeSerializer(
+            authors, many=True, context={'request': request}
+        )
+        return Response(serializer.data)
 
     @action(
         detail=False,
