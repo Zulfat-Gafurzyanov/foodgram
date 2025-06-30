@@ -23,7 +23,7 @@ class RecipeAdmin(admin.ModelAdmin):
     list_filter = ('tags',)
     inlines = (IngredientInRecipeInline,)
 
-    def favorites_count(self, obj):
+    def favorite_count(self, obj):
         return obj.favorite.count()
 
 
