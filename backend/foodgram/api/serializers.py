@@ -1,4 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
+from djoser.serializers import UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
@@ -82,13 +83,20 @@ class UserSubscribeSerializer(UserSerializer):
         return data
 
 
-class SubscriptionSerializer(serializers.ModelSerializer):
-    """Сериализатор для поля автор."""
-    author = UserSubscribeSerializer(read_only=True)
+class CustomUserCreateSerializer(UserCreateSerializer):
+    first_name = serializers.CharField(required=True, max_length=150)
+    last_name = serializers.CharField(required=True, max_length=150)
 
     class Meta:
-        model = Subscribes
-        fields = ('author',)
+        model = User
+        fields = (
+            "id",
+            "email",
+            "username",
+            "first_name",
+            "last_name",
+            "password",
+        )
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
