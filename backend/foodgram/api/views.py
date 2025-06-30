@@ -101,7 +101,7 @@ class UserAccauntViewSet(UserViewSet):
             .prefetch_related(
                 Prefetch(
                     'recipes',
-                    queryset=Recipes.objects.order_by('-pub_date').only(
+                    queryset=Recipes.objects.only(
                         'id', 'name', 'image', 'cooking_time'
                     ),
                 )
