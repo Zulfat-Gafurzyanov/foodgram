@@ -72,29 +72,16 @@ class UserAccauntViewSet(UserViewSet):
         """Реализует логику подписки и отписки на пользователя."""
         author = self.get_object()
         user = request.user
-        subscription_data = {'user': user.id, 'author': author.id}
-        try:
+        if request.method == 'POST':
+            Subscribes.objects.create(user=user, author=author)
             serializer = UserSubscribeSerializer(
-                data=subscription_data,
-                context={'request': request}
+                author, context={"request": request}
             )
-            serializer.is_valid(raise_exception=True)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-            if request.method == 'POST':
-                serializer.save()
-                return Response(
-                    {f'Подписались на {author.username}'},
-                    status=status.HTTP_201_CREATED
-                )
-            elif request.method == 'DELETE':
-                Subscribes.objects.filter(user=user, author=author).delete()
-                return Response(
-                    {f'Отписались от {author.username}'},
-                    status=status.HTTP_204_NO_CONTENT
-                )
-
-        except Exception as e:
-            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        elif request.method == 'DELETE':
+            Subscribes.objects.filter(user=user, author=author).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,
