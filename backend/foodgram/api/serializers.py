@@ -1,5 +1,4 @@
 from django.core.exceptions import ObjectDoesNotExist
-from djoser.serializers import UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
@@ -31,6 +30,19 @@ class UserSerializer(serializers.ModelSerializer):
         if not user.is_authenticated:
             return False
         return Subscribes.objects.filter(user=user, author=obj).exists()
+
+    def validate(self, attrs):
+        """Проверяет наличие обязательных полей."""
+        required_fields = {'email', 'username', 'first_name', 'last_name'}
+        missing_fields = set()
+        for field in required_fields:
+            if field not in attrs:
+                missing_fields.add(field)
+        if missing_fields:
+            raise serializers.ValidationError(
+                f"Поле '{field}' является обязательным."
+            )
+        return attrs
 
 
 class UserSubscribeSerializer(UserSerializer):
@@ -81,22 +93,6 @@ class UserSubscribeSerializer(UserSerializer):
             )
 
         return data
-
-
-class CustomUserCreateSerializer(UserCreateSerializer):
-    first_name = serializers.CharField(required=True, max_length=150)
-    last_name = serializers.CharField(required=True, max_length=150)
-
-    class Meta:
-        model = User
-        fields = (
-            "id",
-            "email",
-            "username",
-            "first_name",
-            "last_name",
-            "password",
-        )
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
