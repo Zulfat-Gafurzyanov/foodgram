@@ -7,8 +7,8 @@ from .models import User
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
     add_fieldsets = (
-        (None, {'fields': ('email', 'username', 'password')}),
-        ('Personal info', {'fields': ('first_name', 'last_name', 'avatar')}),
+        (None, {'fields': ('email', 'username', 'password',
+                           'first_name', 'last_name')}),
     )
     list_display = ('username', 'id', 'email', 'first_name', 'last_name',)
     search_fields = ('email', 'username')
