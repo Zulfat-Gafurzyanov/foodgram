@@ -82,6 +82,15 @@ class UserSubscribeSerializer(UserSerializer):
         return data
 
 
+class SubscriptionSerializer(serializers.ModelSerializer):
+    """Сериализатор для поля автор."""
+    author = UserSubscribeSerializer(read_only=True)
+
+    class Meta:
+        model = Subscribes
+        fields = ('author',)
+
+
 class RecipeShortSerializer(serializers.ModelSerializer):
     """Сериализатор для рецептов при отображении в подписках."""
 
