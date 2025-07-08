@@ -3,7 +3,7 @@
 
 В документации описаны возможные запросы к API и структура ожидаемых ответов. Для каждого запроса указаны уровни прав доступа.
 Технологии:
-Python, Django, Django Rest Framework, Docker, Gunicorn, NGINX, PostgreSQL, Yandex Cloud, Continuous Integration, Continuous Deployment
+Python, Django, Django Rest Framework, Docker, Gunicorn, NGINX, PostgreSQL
 
 ## Основные доступные endpoints:
 GET /api/recipes/ - список рецептов
