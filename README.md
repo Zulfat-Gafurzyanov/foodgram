@@ -2,8 +2,16 @@
 - продуктовый помощник с базой кулинарных рецептов. Позволяет публиковать рецепты, сохранять избранные, а также формировать список покупок для выбранных рецептов. Можно подписываться на любимых авторов.
 
 В документации описаны возможные запросы к API и структура ожидаемых ответов. Для каждого запроса указаны уровни прав доступа.
-Технологии:
-Python, Django, Django Rest Framework, Docker, Gunicorn, NGINX, PostgreSQL
+
+## Структура проекта:
+
+backend/ — содержит исходный код серверной части приложения.
+foodgram/ — основное приложение Django.
+recipes/ — приложение для работы с рецептами.
+users/ — приложение для управления пользователями.
+api/ — реализация API на основе Django REST Framework.
+frontend/ — исходный код клиентской части (если есть).
+api/docs/ — документация по проекту.
 
 ## Основные доступные endpoints:
 GET /api/recipes/ - список рецептов
@@ -14,25 +22,13 @@ GET /api/ingredients/ - список ингредиентов
 POST /api/auth/token/login/ - получение токена
 GET /api/users/me/ - профиль текущего пользователя
 
+## Развёртывание:
 
-## Запуск проекта:
+Для развертывания проекта используйте Docker. Убедитесь, что у вас установлены Docker и Docker Compose. Выполните следующие команды:
+docker compose up --build
+docker compose exec backend python manage.py migrate
+docker compose exec backend python manage.py collectstatic
+docker compose exec backend cp -r /app/collected_static/. /backend_static/static/
+docker compose exec backend python manage.py csv_upload
 
-### Клонируйте проект:
-git clone https://github.com/ruzhova/foodgram-project-react.git
-
-### Подготовьте сервер:
-scp docker-compose.yml <username>@<host>:/home/<username>/
-scp nginx.conf <username>@<host>:/home/<username>/
-scp .env <username>@<host>:/home/<username>/
-
-### Установите docker и docker-compose:
-sudo apt install docker.io 
-sudo apt install docker-compose
-
-### Соберите контейнер и выполните миграции:
-sudo docker-compose up -d --build
-sudo docker-compose exec backend python manage.py migrate
-
-### Создайте суперюзера и соберите статику:
-sudo docker-compose exec backend python manage.py createsuperuser
-sudo docker-compose exec backend python manage.py collectstatic --no-input
+Стек: Python, Django, Django Rest Framework, Docker, Gunicorn, NGINX, PostgreSQL
